@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Web VS Code-like IDE</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: Consolas, "Fira Code", monospace;
+    }
+
+    body {
+      background-color: #1e1e1e;
+      color: #d4d4d4;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Top bar */
+    .titlebar {
+      background: #3c3c3c;
+      color: #ffffff;
+      padding: 6px 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    .titlebar-left span {
+      margin-right: 12px;
+      opacity: 0.8;
+    }
+
+    .titlebar-right span {
+      margin-left: 12px;
+      opacity: 0.8;
+    }
+
+    /* Main layout */
+    .main {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Sidebar (fake explorer) */
+    .sidebar {
+      width: 200px;
+      background: #252526;
+      border-right: 1px solid #333;
+      padding: 8px;
+      font-size: 13px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      color: #858585;
+      margin-bottom: 8px;
+    }
+
+    .sidebar-item {
+      padding: 4px 6px;
+      border-radius: 3px;
+      cursor: default;
+      color: #d4d4d4;
+    }
+
+    .sidebar-item.active {
+      background: #37373d;
+    }
+
+    /* Editor area */
+    .editor-container {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      background: #1e1e1e;
+    }
+
+    /* Editor top bar */
+    .editor-topbar {
+      background: #252526;
+      border-bottom: 1px solid #333;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+    }
+
+    .editor-topbar label {
+      font-size: 12px;
+      color: #cccccc;
+    }
+
+    .editor-topbar select,
+    .editor-topbar input {
+      background: #1e1e1e;
+      border: 1px solid #3c3c3c;
+      color: #d4d4d4;
+      padding: 3px 6px;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+
+    .editor-topbar button {
+      background: #0e639c;
+      border: none;
+      color: #ffffff;
+      padding: 5px 10px;
+      border-radius: 3px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .editor-topbar button:hover {
+      background: #1177bb;
+    }
+
+    /* Editor */
+    .editor {
+      flex: 1;
+      position: relative;
+      display: flex;
+      background: #1e1e1e;
+    }
+
+    .line-numbers {
+      width: 40px;
+      background: #252526;
+      color: #858585;
+      padding: 8px 4px;
+      text-align: right;
+      font-size: 13px;
+      overflow: hidden;
+      user-select: none;
+      border-right: 1px solid #333;
+    }
+
+    .line-numbers div {
+      height: 18px;
+    }
+
+    textarea#code {
+      flex: 1;
+      background: #1e1e1e;
+      color: #d4d4d4;
+      border: none;
+      padding: 8px;
+      font-size: 13px;
+      line-height: 18px;
+      resize: none;
+      outline: none;
+      tab-size: 4;
+      white-space: pre;
+      overflow: auto;
+    }
+
+    /* Status bar */
+    .statusbar {
+      height: 22px;
+      background: #007acc;
+      color: #ffffff;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 10px;
+    }
+
+    .statusbar span {
+      opacity: 0.9;
+    }
+
+    @media (max-width: 700px) {
+      .sidebar {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <span>File</span>
+      <span>Edit</span>
+      <span>Selection</span>
+      <span>View</span>
+      <span>Go</span>
+      <span>Run</span>
+      <span>Terminal</span>
+      <span>Help</span>
+    </div>
+    <div class="titlebar-right">
+      <span>Web IDE</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sidebar">
+      <div class="sidebar-title">Explorer</div>
+      <div class="sidebar-item active">untitled</div>
+      <div class="sidebar-title" style="margin-top: 12px;">Languages</div>
+      <div class="sidebar-item">Python (.py)</div>
+      <div class="sidebar-item">HTML (.html)</div>
+      <div class="sidebar-item">CSS (.css)</div>
+      <div class="sidebar-item">JavaScript (.js)</div>
+      <div class="sidebar-item">C++ (.cpp)</div>
+      <div class="sidebar-item">Batch (.bat)</div>
+      <div class="sidebar-item">PowerShell (.ps1)</div>
+      <div class="sidebar-item">Other…</div>
+    </div>
+
+    <div class="editor-container">
+      <div class="editor-topbar">
+        <label for="language">Language:</label>
+        <select id="language">
+          <option value="py">Python (.py)</option>
+          <option value="html">HTML (.html)</option>
+          <option value="css">CSS (.css)</option>
+          <option value="js">JavaScript (.js)</option>
+          <option value="cpp">C++ (.cpp)</option>
+          <option value="c">C (.c)</option>
+          <option value="cs">C# (.cs)</option>
+          <option value="java">Java (.java)</option>
+          <option value="ts">TypeScript (.ts)</option>
+          <option value="json">JSON (.json)</option>
+          <option value="bat">Batch (.bat)</option>
+          <option value="ps1">PowerShell (.ps1)</option>
+          <option value="sh">Shell (.sh)</option>
+          <option value="txt">Plain text (.txt)</option>
+        </select>
+
+        <label for="filename">File name:</label>
+        <input id="filename" type="text" placeholder="script.py" />
+
+        <button id="downloadBtn">Download file</button>
+      </div>
+
+      <div class="editor">
+        <div class="line-numbers" id="lineNumbers"></div>
+        <textarea id="code" spellcheck="false"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <div class="statusbar">
+    <span id="status-left">UTF-8  |  LF</span>
+    <span id="status-right">Ln 1, Col 1</span>
+  </div>
+
+  <script>
+    const languageSelect = document.getElementById("language");
+    const filenameInput = document.getElementById("filename");
+    const codeArea = document.getElementById("code");
+    const downloadBtn = document.getElementById("downloadBtn");
+    const lineNumbers = document.getElementById("lineNumbers");
+    const statusRight = document.getElementById("status-right");
+
+    const defaultNames = {
+      py: "script.py",
+      html: "index.html",
+      css: "style.css",
+      js: "app.js",
+      cpp: "main.cpp",
+      c: "main.c",
+      cs: "Program.cs",
+      java: "Main.java",
+      ts: "app.ts",
+      json: "data.json",
+      bat: "script.bat",
+      ps1: "script.ps1",
+      sh: "script.sh",
+      txt: "file.txt",
+    };
+
+    function updateFilenameFromLanguage() {
+      const lang = languageSelect.value;
+      if (!filenameInput.value || !filenameInput.value.includes(".")) {
+        filenameInput.value = defaultNames[lang] || "file.txt";
+      }
+    }
+
+    function updateLineNumbers() {
+      const lines = codeArea.value.split("\n").length;
+      let html = "";
+      for (let i = 1; i <= lines; i++) {
+        html += "<div>" + i + "</div>";
+      }
+      lineNumbers.innerHTML = html;
+    }
+
+    function updateCursorPosition() {
+      const text = codeArea.value;
+      const pos = codeArea.selectionStart;
+      const untilPos = text.slice(0, pos);
+      const lines = untilPos.split("\n");
+      const line = lines.length;
+      const col = lines[lines.length - 1].length + 1;
+      statusRight.textContent = "Ln " + line + ", Col " + col;
+    }
+
+    function downloadFile() {
+      const content = codeArea.value;
+      let filename = filenameInput.value.trim();
+      const lang = languageSelect.value;
+
+      if (!filename) {
+        filename = defaultNames[lang] || "file.txt";
+      }
+
+      // Ensure extension matches language if missing
+      if (!filename.includes(".")) {
+        const ext = defaultNames[lang]?.split(".").pop();
+        if (ext) filename += "." + ext;
+      }
+
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }
+
+    // Tab support in textarea
+    codeArea.addEventListener("keydown", function (e) {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const start = this.selectionStart;
+        const end = this.selectionEnd;
+        const value = this.value;
+        this.value = value.substring(0, start) + "\t" + value.substring(end);
+        this.selectionStart = this.selectionEnd = start + 1;
+        updateLineNumbers();
+        updateCursorPosition();
+      }
+    });
+
+    codeArea.addEventListener("input", () => {
+      updateLineNumbers();
+      updateCursorPosition();
+    });
+
+    codeArea.addEventListener("click", updateCursorPosition);
+    codeArea.addEventListener("keyup", updateCursorPosition);
+
+    languageSelect.addEventListener("change", updateFilenameFromLanguage);
+    downloadBtn.addEventListener("click", downloadFile);
+
+    // Initialize
+    updateFilenameFromLanguage();
+    updateLineNumbers();
+    updateCursorPosition();
+  </script>
+</body>
+</html>
