@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CodeStudio</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Consolas, monospace;
+    background: #1e1e1e;
+    color: #d4d4d4;
+}
+
+.topbar {
+    height: 40px;
+    background: #333;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 10px;
+}
+
+.controls {
+    display: flex;
+    gap: 8px;
+}
+
+input, select {
+    background: #1e1e1e;
+    border: 1px solid #555;
+    color: white;
+    padding: 5px;
+}
+
+button {
+    background: #28a745;
+    border: none;
+    color: white;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+
+.discord-btn {
+    background: #5865F2;
+    padding: 6px 10px;
+    text-decoration: none;
+    color: white;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 40px);
+}
+
+.sidebar {
+    width: 200px;
+    background: #252526;
+    padding: 10px;
+}
+
+.editor {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+textarea {
+    flex: 1;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border: none;
+    padding: 15px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="topbar">
+    <div class="controls">
+        <input id="filename" value="file">
+
+        <select id="filetype">
+
+            <!-- WEB -->
+            <option value="html">.html</option>
+            <option value="css">.css</option>
+            <option value="js">.js</option>
+            <option value="ts">.ts</option>
+            <option value="json">.json</option>
+            <option value="xml">.xml</option>
+            <option value="php">.php</option>
+            <option value="asp">.asp</option>
+            <option value="aspx">.aspx</option>
+
+            <!-- PROGRAMMING -->
+            <option value="py">.py</option>
+            <option value="java">.java</option>
+            <option value="c">.c</option>
+            <option value="cpp">.cpp</option>
+            <option value="cs">.cs</option>
+            <option value="go">.go</option>
+            <option value="rs">.rs</option>
+            <option value="rb">.rb</option>
+            <option value="kt">.kt</option>
+            <option value="swift">.swift</option>
+
+            <!-- SCRIPTING -->
+            <option value="sh">.sh</option>
+            <option value="bat">.bat</option>
+            <option value="ps1">.ps1</option>
+
+            <!-- DATA / TEXT -->
+            <option value="txt">.txt</option>
+            <option value="md">.md</option>
+            <option value="csv">.csv</option>
+            <option value="yaml">.yaml</option>
+            <option value="yml">.yml</option>
+            <option value="ini">.ini</option>
+            <option value="log">.log</option>
+
+            <!-- EXTRA / FUN -->
+            <option value="sb">.sb</option>
+            <option value="sb3">.sb3</option>
+            <option value="scratch">.scratch</option>
+
+        </select>
+
+        <button onclick="saveFile()">Save</button>
+        <a class="discord-btn" href="https://discord.gg/TnapcAhAXS" target="_blank">Discord</a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="sidebar">
+        <div>index.html</div>
+        <div>script.js</div>
+        <div>style.css</div>
+    </div>
+
+    <div class="editor">
+        <textarea id="editor">
+print("Hello world")
+        </textarea>
+    </div>
+</div>
+
+<script>
+function saveFile() {
+    const content = document.getElementById("editor").value;
+    const name = document.getElementById("filename").value || "file";
+    const type = document.getElementById("filetype").value;
+
+    let mime = "text/plain";
+
+    const mimeTypes = {
+        html: "text/html",
+        css: "text/css",
+        js: "application/javascript",
+        ts: "application/typescript",
+        json: "application/json",
+        xml: "application/xml",
+        py: "text/x-python",
+        java: "text/x-java",
+        c: "text/x-c",
+        cpp: "text/x-c++",
+        cs: "text/plain",
+        go: "text/plain",
+        rs: "text/plain",
+        rb: "text/plain",
+        kt: "text/plain",
+        swift: "text/plain",
+        sh: "text/x-shellscript",
+        bat: "text/plain",
+        ps1: "text/plain",
+        md: "text/markdown",
+        csv: "text/csv",
+        yaml: "text/yaml",
+        yml: "text/yaml"
+    };
+
+    if (mimeTypes[type]) mime = mimeTypes[type];
+
+    const blob = new Blob([content], { type: mime });
+    const a = document.createElement("a");
+
+    a.href = URL.createObjectURL(blob);
+    a.download = name + "." + type;
+    a.click();
+
+    URL.revokeObjectURL(a.href);
+}
+</script>
+
+</body>
+</html>
